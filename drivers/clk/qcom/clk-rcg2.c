@@ -128,13 +128,8 @@ static int update_config(struct clk_rcg2 *rcg)
 		udelay(1);
 	}
 
-<<<<<<< HEAD
 	WARN(1, "clk: %s: rcg didn't update its configuration.", name);
 	return 0;
-=======
-	WARN(1, "%s: rcg didn't update its configuration.", name);
-	return -EBUSY;
->>>>>>> v4.9.220
 }
 
 static int clk_rcg2_set_parent(struct clk_hw *hw, u8 index)
