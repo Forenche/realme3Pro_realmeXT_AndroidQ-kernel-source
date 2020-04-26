@@ -1117,6 +1117,7 @@ static int ucc_hdlc_probe(struct platform_device *pdev)
 	if (register_hdlc_device(dev)) {
 		ret = -ENOBUFS;
 		pr_err("ucc_hdlc: unable to register hdlc device\n");
+		free_netdev(dev);
 		goto free_dev;
 	}
 

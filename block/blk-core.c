@@ -33,6 +33,7 @@
 #include <linux/ratelimit.h>
 #include <linux/pm_runtime.h>
 #include <linux/blk-cgroup.h>
+#include <linux/debugfs.h>
 #include <linux/psi.h>
 
 #define CREATE_TRACE_POINTS
@@ -2225,7 +2226,13 @@ blk_qc_t submit_bio(struct bio *bio)
 				bdevname(bio->bi_bdev, b),
 				count);
 		}
-	}	
+	}
+#ifdef VENDOR_EDIT
+/*Huacai.Zhou@PSW.BSP.Kernel.Performance, 2018-04-28, add foreground task io opt*/
+	if (high_prio_for_task(current))
+		bio->bi_opf |= REQ_FG;
+#endif
+
 	/*
 	 * If we're reading data that is part of the userspace
 	 * workingset, count submission time as memory stall. When the
@@ -2241,12 +2248,6 @@ blk_qc_t submit_bio(struct bio *bio)
 		psi_memstall_leave(&pflags);
 
 	return ret;
-#ifdef VENDOR_EDIT
-/*Huacai.Zhou@PSW.BSP.Kernel.Performance, 2018-04-28, add foreground task io opt*/
-	if (high_prio_for_task(current))
-		bio->bi_opf |= REQ_FG;
-#endif
-	return generic_make_request(bio);
 }
 EXPORT_SYMBOL(submit_bio);
 

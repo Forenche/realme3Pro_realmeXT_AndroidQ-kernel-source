@@ -796,10 +796,6 @@ static int uas_slave_alloc(struct scsi_device *sdev)
 {
 	struct uas_dev_info *devinfo =
 		(struct uas_dev_info *)sdev->host->hostdata;
-
-	sdev->hostdata = devinfo;
-
-	/*
 #ifndef VENDOR_EDIT
 /*LIZHIJIE@BSP.BASTCI.CHG  2019/10/18 add for asking the block layer to respect the maxpacket limitation*/
 	int maxp;

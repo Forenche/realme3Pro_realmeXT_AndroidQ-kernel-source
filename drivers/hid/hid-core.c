@@ -1,4 +1,4 @@
-  /*
+/*
  *  HID support for Linux
  *
  *  Copyright (c) 1999 Andreas Gal
@@ -2913,3 +2913,4 @@ MODULE_AUTHOR("Andreas Gal");
 MODULE_AUTHOR("Vojtech Pavlik");
 MODULE_AUTHOR("Jiri Kosina");
 MODULE_LICENSE(DRIVER_LICENSE);
+

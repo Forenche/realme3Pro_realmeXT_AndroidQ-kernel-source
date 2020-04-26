@@ -1,3 +1,4 @@
+
 /*
  * Block data types and constants.  Directly include this file only to
  * break include dependency loop.
@@ -109,8 +110,14 @@ struct bio {
 #define bio_op(bio)	((bio)->bi_opf >> BIO_OP_SHIFT)
 
 #define bio_set_op_attrs(bio, op, op_flags) do {			\
-	WARN_ON_ONCE((op) + 0U >= (1U << REQ_OP_BITS));			\
-	WARN_ON_ONCE((op_flags) + 0U >= (1U << BIO_OP_SHIFT));		\
+	if (__builtin_constant_p(op))					\
+		BUILD_BUG_ON((op) + 0U >= (1U << REQ_OP_BITS));		\
+	else								\
+		WARN_ON_ONCE((op) + 0U >= (1U << REQ_OP_BITS));		\
+	if (__builtin_constant_p(op_flags))				\
+		BUILD_BUG_ON((op_flags) + 0U >= (1U << BIO_OP_SHIFT));	\
+	else								\
+		WARN_ON_ONCE((op_flags) + 0U >= (1U << BIO_OP_SHIFT));	\
 	(bio)->bi_opf = bio_flags(bio);					\
 	(bio)->bi_opf |= (((op) + 0U) << BIO_OP_SHIFT);			\
 	(bio)->bi_opf |= (op_flags);					\
@@ -130,6 +137,11 @@ struct bio {
 #define BIO_QUIET	7	/* Make BIO Quiet */
 #define BIO_CHAIN	8	/* chained bio, ->bi_remaining in effect */
 #define BIO_REFFED	9	/* bio has elevated ->bi_cnt */
+#define BIO_THROTTLED	10	/* This bio has already been subjected to
+				 * throttling rules. Don't do it again. */
+#define BIO_TRACE_COMPLETION 11	/* bio_endio() should trace the final completion
+				 * of this bio. */
+/* See BVEC_POOL_OFFSET below before adding new flags */
 
 /*
  * Flags starting here get preserved by bio_reset() - this includes
