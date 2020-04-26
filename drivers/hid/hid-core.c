@@ -1,4 +1,4 @@
-/*
+  /*
  *  HID support for Linux
  *
  *  Copyright (c) 1999 Andreas Gal
@@ -197,18 +197,6 @@ static unsigned hid_lookup_collection(struct hid_parser *parser, unsigned type)
 }
 
 /*
- * Concatenate usage which defines 16 bits or less with the
- * currently defined usage page to form a 32 bit usage
- */
-
-static void complete_usage(struct hid_parser *parser, unsigned int index)
-{
-	parser->local.usage[index] &= 0xFFFF;
-	parser->local.usage[index] |=
-		(parser->global.usage_page & 0xFFFF) << 16;
-}
-
-/*
  * Add a usage to the temporary parser table.
  */
 
@@ -218,14 +206,6 @@ static int hid_add_usage(struct hid_parser *parser, unsigned usage, u8 size)
 		hid_err(parser->device, "usage index exceeded\n");
 		return -1;
 	}
-	parser->local.usage[parser->local.usage_index] = usage;
-
-	/*
-	 * If Usage item only includes usage id, concatenate it with
-	 * currently defined usage page
-	 */
-	if (size <= 2)
-		complete_usage(parser, parser->local.usage_index);
 	if (!parser->local.usage_index && parser->global.usage_page)
 		parser->local.usage_page_preceding = 1;
 	if (parser->local.usage_page_preceding == 2)
@@ -553,32 +533,6 @@ static int hid_parser_local(struct hid_parser *parser, struct hid_item *item)
  * usage value."
  */
 
-static void hid_concatenate_last_usage_page(struct hid_parser *parser)
-{
-	int i;
-	unsigned int usage_page;
-	unsigned int current_page;
-
-	if (!parser->local.usage_index)
-		return;
-
-	usage_page = parser->global.usage_page;
-
-	/*
-	 * Concatenate usage page again only if last declared Usage Page
-	 * has not been already used in previous usages concatenation
-	 */
-	for (i = parser->local.usage_index - 1; i >= 0; i--) {
-		if (parser->local.usage_size[i] > 2)
-			/* Ignore extended usages */
-			continue;
-
-		current_page = parser->local.usage[i] >> 16;
-		if (current_page == usage_page)
-			break;
-
-		complete_usage(parser, i);
-	}
 static void hid_concatenate_usage_page(struct hid_parser *parser)
 {
 	int i;
@@ -604,7 +558,6 @@ static int hid_parser_main(struct hid_parser *parser, struct hid_item *item)
 	__u32 data;
 	int ret;
 
-	//hid_concatenate_last_usage_page(parser);
 	hid_concatenate_usage_page(parser);
 
 	data = item_udata(item);
@@ -820,7 +773,6 @@ static int hid_scan_main(struct hid_parser *parser, struct hid_item *item)
 	__u32 data;
 	int i;
 
-	//hid_concatenate_last_usage_page(parser);
 	hid_concatenate_usage_page(parser);
 
 	data = item_udata(item);
@@ -1024,7 +976,6 @@ int hid_open_report(struct hid_device *device)
 	__u8 *start;
 	__u8 *buf;
 	__u8 *end;
-	__u8 *next;
 	int ret;
 	static int (*dispatch_type[])(struct hid_parser *parser,
 				      struct hid_item *item) = {
@@ -1078,8 +1029,7 @@ int hid_open_report(struct hid_device *device)
 	device->collection_size = HID_DEFAULT_NUM_COLLECTIONS;
 
 	ret = -EINVAL;
-	while ((next = fetch_item(start, end, &item)) != NULL) {
-		start = next;
+	while ((start = fetch_item(start, end, &item)) != NULL) {
 
 		if (item.format != HID_ITEM_FORMAT_SHORT) {
 			hid_err(device, "unexpected long global item\n");
@@ -1108,8 +1058,7 @@ int hid_open_report(struct hid_device *device)
 		}
 	}
 
-	hid_err(device, "item fetching failed at offset %u/%u\n",
-		size - (unsigned int)(end - start), size);
+	hid_err(device, "item fetching failed at offset %d\n", (int)(end - start));
 err:
 	vfree(parser);
 	hid_close_report(device);
@@ -2183,9 +2132,6 @@ static const struct hid_device_id hid_have_special_driver[] = {
 	{ HID_USB_DEVICE(USB_VENDOR_ID_UCLOGIC, USB_DEVICE_ID_UGEE_TABLET_45) },
 	{ HID_USB_DEVICE(USB_VENDOR_ID_UCLOGIC, USB_DEVICE_ID_UCLOGIC_DRAWIMAGE_G3) },
 	{ HID_USB_DEVICE(USB_VENDOR_ID_UGTIZER, USB_DEVICE_ID_UGTIZER_TABLET_GP0610) },
-	{ HID_USB_DEVICE(USB_VENDOR_ID_VALVE, USB_DEVICE_ID_STEAM_CONTROLLER) },
-	{ HID_USB_DEVICE(USB_VENDOR_ID_VALVE, USB_DEVICE_ID_STEAM_CONTROLLER_WIRELESS) },
-	{ HID_BLUETOOTH_DEVICE(USB_VENDOR_ID_VALVE, USB_DEVICE_ID_STEAM_CONTROLLER_BT) },
 	{ HID_USB_DEVICE(USB_VENDOR_ID_WISEGROUP, USB_DEVICE_ID_SMARTJOY_PLUS) },
 	{ HID_USB_DEVICE(USB_VENDOR_ID_WISEGROUP, USB_DEVICE_ID_SUPER_JOY_BOX_3) },
 	{ HID_USB_DEVICE(USB_VENDOR_ID_WISEGROUP, USB_DEVICE_ID_DUAL_USB_JOYPAD) },
@@ -2967,4 +2913,3 @@ MODULE_AUTHOR("Andreas Gal");
 MODULE_AUTHOR("Vojtech Pavlik");
 MODULE_AUTHOR("Jiri Kosina");
 MODULE_LICENSE(DRIVER_LICENSE);
-
