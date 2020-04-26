@@ -3955,8 +3955,11 @@ int dwc3_gadget_init(struct dwc3 *dwc)
 	dwc->gadget.speed		= USB_SPEED_UNKNOWN;
 	dwc->gadget.sg_supported	= true;
 	dwc->gadget.name		= "dwc3-gadget";
+<<<<<<< HEAD
 	dwc->gadget.is_otg		= dwc->dr_mode == USB_DR_MODE_OTG;
 	dwc->gadget.l1_supported	= !dwc->usb2_l1_disable;
+=======
+>>>>>>> v4.9.220
 
 	/*
 	 * FIXME We might be setting max_speed to <SUPER, however versions
